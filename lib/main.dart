@@ -166,7 +166,7 @@ class _BookPageState extends State<BookPage> {
     );
   }
 
-  void _bookSlot() {
+  Future<void> _bookSlot() async {
     if (!_formKey.currentState.validate()) return;
     _formKey.currentState.save();
 //    users[_editedObject.timeSlot].add(_editedObject);
@@ -182,15 +182,19 @@ class _BookPageState extends State<BookPage> {
 //        ]
 //      }),
 //    );
-    final valid = await slotChecker();
-    http.post(
-      url2 + 'slots/$timeSlot.json',
-      body: json.encode({
-        'username': username,
-        'email': email,
-        'status': true,
-      }),
-    );
+    bool valid = await slotChecker();
+    if (valid) {
+      http.post(
+        url2 + 'slots/$timeSlot.json',
+        body: json.encode({
+          'username': username,
+          'email': email,
+          'status': true,
+        }),
+      );
+    } else {
+      print('Slot is already booked');
+    }
   }
 
   Future<bool> slotChecker() async {
@@ -201,7 +205,6 @@ class _BookPageState extends State<BookPage> {
       users.forEach((key, value) {
         count++;
       });
-      print(count);
       return (count < 5) ? true : false;
     } catch (error) {
       throw (error);
