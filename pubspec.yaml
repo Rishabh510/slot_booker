@@ -12,6 +12,9 @@ dependencies:
   cupertino_icons: ^0.1.3
   http:
   flutter_screenutil:
+  flutter_spinkit: ^4.1.2
+  animated_text_kit: ^2.2.0
+
 
 dev_dependencies:
   flutter_test:
