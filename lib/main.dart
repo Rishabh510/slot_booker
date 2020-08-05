@@ -4,6 +4,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:slot_booker/userObject.dart';
+import 'package:confetti/confetti.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,9 +14,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Slot Booker App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.deepOrange,
+        accentColor: Colors.deepOrangeAccent,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: BookPage(),
@@ -66,18 +69,25 @@ class _BookPageState extends State<BookPage> {
   var _editedObject = UserObject(username: '', email: '', timeSlot: '5-6');
   var _isLoading = false;
   var count = 0;
-
-//  Map<String, List<UserObject>> users;
+  ConfettiController _controllerCenter;
 
   @override
   void initState() {
     count = 0;
     timeSlot = '5-6';
+    _controllerCenter = ConfettiController(duration: const Duration(seconds: 3));
     super.initState();
   }
 
   @override
+  void didChangeDependencies() {
+    _controllerCenter = ConfettiController(duration: const Duration(seconds: 3));
+    super.didChangeDependencies();
+  }
+
+  @override
   void dispose() {
+    _controllerCenter.dispose();
     _emailFocus.dispose();
     _slotFocus.dispose();
     super.dispose();
@@ -99,100 +109,167 @@ class _BookPageState extends State<BookPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Slot Booker'),
+        centerTitle: true,
+        elevation: 8,
+        title: TypewriterAnimatedTextKit(
+          repeatForever: true,
+          isRepeatingAnimation: true,
+          speed: Duration(milliseconds: 250),
+          onTap: () {},
+          text: [
+            "Slot Booking Application",
+          ],
+          textAlign: TextAlign.center,
+          alignment: AlignmentDirectional.center,
+        ),
       ),
       body: (_isLoading)
           ? spinner(context)
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'User Name',
-                      ),
-                      textInputAction: TextInputAction.next,
-                      validator: (val) {
-                        if (val.isEmpty) {
-                          return 'Please enter user name';
-                        }
-                        return null;
-                      },
-                      onFieldSubmitted: (val) {
+          : Stack(
+              children: [
+                SingleChildScrollView(
+                  child: Container(
+                    height: MediaQuery.of(context).size.height - AppBar().preferredSize.height,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Form(
+                            key: _formKey,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: <Widget>[
+                                TextFormField(
+                                  decoration: InputDecoration(
+                                    labelText: 'User Name',
+                                  ),
+                                  textInputAction: TextInputAction.next,
+                                  validator: (val) {
+                                    if (val.isEmpty) {
+                                      return 'Please enter user name';
+                                    }
+                                    return null;
+                                  },
+                                  onFieldSubmitted: (val) {
 //                FocusScope.of(context).requestFocus(_emailFocus);
-                        _emailFocus.requestFocus();
-                      },
-                      onSaved: (val) {
-                        username = val;
-                        _editedObject = UserObject(username: val, email: _editedObject.email, timeSlot: _editedObject.timeSlot);
-                      },
-                    ),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Email',
+                                    _emailFocus.requestFocus();
+                                  },
+                                  onSaved: (val) {
+                                    username = val;
+                                    _editedObject = UserObject(username: val, email: _editedObject.email, timeSlot: _editedObject.timeSlot);
+                                  },
+                                ),
+                                TextFormField(
+                                  decoration: InputDecoration(
+                                    labelText: 'Email',
+                                  ),
+                                  textInputAction: TextInputAction.next,
+                                  keyboardType: TextInputType.emailAddress,
+                                  focusNode: _emailFocus,
+                                  validator: (val) {
+                                    if (val.isEmpty) {
+                                      return 'Please enter email address';
+                                    }
+                                    return null;
+                                  },
+                                  onFieldSubmitted: (val) {
+                                    _slotFocus.requestFocus();
+                                  },
+                                  onSaved: (val) {
+                                    email = val;
+                                    _editedObject = UserObject(
+                                      username: _editedObject.username,
+                                      email: val,
+                                      timeSlot: _editedObject.timeSlot,
+                                    );
+                                  },
+                                ),
+                                DropdownButtonFormField(
+                                  value: '5-6',
+                                  onSaved: (val) {
+                                    _editedObject = UserObject(username: _editedObject.username, email: _editedObject.email, timeSlot: val);
+                                  },
+                                  items: [
+                                    DropdownMenuItem(
+                                      child: Text('5-6'),
+                                      value: '5-6',
+                                    ),
+                                    DropdownMenuItem(
+                                      child: Text('6-7'),
+                                      value: '6-7',
+                                    ),
+                                    DropdownMenuItem(
+                                      child: Text('7-8'),
+                                      value: '7-8',
+                                    ),
+                                  ],
+                                  onChanged: (val) {
+                                    timeSlot = val;
+                                    setState(() {});
+                                  },
+                                  focusNode: _slotFocus,
+                                  decoration: InputDecoration(labelText: 'Choose Slot'),
+                                ),
+                                RaisedButton(
+                                  onPressed: _bookSlot,
+                                  child: Text('Submit'),
+                                ),
+                                RaisedButton(
+                                  onPressed: _viewSlots,
+                                  child: Text('View Bookings'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                'Contact: ',
+                                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                              ),
+                              RotateAnimatedTextKit(
+                                onTap: () {},
+                                repeatForever: true,
+                                text: [
+                                  "Rishabh Raizada",
+                                  "rishabh5102000@gmail.com",
+                                  "+91 8860932771",
+                                ],
+                                textStyle: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+//                            textAlign: TextAlign.end,
+//                            alignment: AlignmentDirectional.bottomEnd,
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      textInputAction: TextInputAction.next,
-                      keyboardType: TextInputType.emailAddress,
-                      focusNode: _emailFocus,
-                      validator: (val) {
-                        if (val.isEmpty) {
-                          return 'Please enter email address';
-                        }
-                        return null;
-                      },
-                      onFieldSubmitted: (val) {
-                        _slotFocus.requestFocus();
-                      },
-                      onSaved: (val) {
-                        email = val;
-                        _editedObject = UserObject(
-                          username: _editedObject.username,
-                          email: val,
-                          timeSlot: _editedObject.timeSlot,
-                        );
-                      },
                     ),
-                    DropdownButtonFormField(
-                      value: '5-6',
-                      onSaved: (val) {
-                        _editedObject = UserObject(username: _editedObject.username, email: _editedObject.email, timeSlot: val);
-                      },
-                      items: [
-                        DropdownMenuItem(
-                          child: Text('5-6'),
-                          value: '5-6',
-                        ),
-                        DropdownMenuItem(
-                          child: Text('6-7'),
-                          value: '6-7',
-                        ),
-                        DropdownMenuItem(
-                          child: Text('7-8'),
-                          value: '7-8',
-                        ),
-                      ],
-                      onChanged: (val) {
-                        timeSlot = val;
-                        setState(() {});
-                      },
-                      focusNode: _slotFocus,
-                      decoration: InputDecoration(labelText: 'Choose Slot'),
-                    ),
-                    RaisedButton(
-                      onPressed: _bookSlot,
-                      child: Text('Submit'),
-                    ),
-                    RaisedButton(
-                      onPressed: _viewSlots,
-                      child: Text('View Bookings'),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                Positioned(
+                  height: MediaQuery.of(context).size.height - AppBar().preferredSize.height,
+                  width: MediaQuery.of(context).size.width,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: ConfettiWidget(
+                      confettiController: _controllerCenter,
+                      blastDirectionality: BlastDirectionality.explosive, // don't specify a direction, blast randomly
+                      shouldLoop: false, // start again as soon as the animation is finished
+                      colors: const [
+                        Colors.green,
+                        Colors.blue,
+                        Colors.pink,
+                        Colors.orange,
+                        Colors.purple,
+                      ],
+                      numberOfParticles: 25,
+                      gravity: 0.2,
+                    ),
+                  ),
+                ),
+              ],
             ),
     );
   }
@@ -210,9 +287,10 @@ class _BookPageState extends State<BookPage> {
       _showDialogSlots(context, users);
     } catch (error) {
       setState(() {
-        _isLoading = true;
+        _isLoading = false;
       });
-      //TODO: add error dialog
+      print(error);
+      _showDialogError(context, error);
       throw (error);
     }
   }
@@ -237,9 +315,6 @@ class _BookPageState extends State<BookPage> {
 //      }),
 //    );
     await slotChecker();
-    setState(() {
-      _isLoading = false;
-    });
     if (count < 5) {
       _showDialogSuccess(context);
 //      http.post(
@@ -260,24 +335,47 @@ class _BookPageState extends State<BookPage> {
     try {
       final response = await http.get(url2 + 'slots/$timeSlot.json');
       final users = json.decode(response.body) as Map<String, dynamic>;
+      setState(() {
+        _isLoading = false;
+      });
       count = 0;
       users.forEach((key, value) {
         count++;
       });
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
+      print(error);
+      _showDialogError(context, error);
       throw (error);
     }
   }
 
-//  _myDialog(BuildContext context) {
-//    return showGeneralDialog(
-//        context: context,
-//        barrierDismissible: false,
-//        barrierColor: Colors.deepOrangeAccent,
-//        barrierLabel: 'Label',
-//        pageBuilder: (context, _, _) {},
-//        transitionBuilder: (context, _, _, child) {});
-//  }
+  _showDialogError(BuildContext context, dynamic error) {
+    return showDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierColor: Colors.black.withOpacity(0.4),
+        useSafeArea: true,
+        builder: (context) {
+          return SimpleDialog(
+            elevation: 8,
+            backgroundColor: Colors.blue[100],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.black, width: 2),
+            ),
+            title: Text('ERROR'),
+            children: [
+              SimpleDialogOption(
+                child: Text(error.toString()),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          );
+        });
+  }
 
   _showDialogSuccess(BuildContext context) {
     return showDialog(
@@ -313,6 +411,8 @@ class _BookPageState extends State<BookPage> {
                   setState(() {
                     _isLoading = false;
                   });
+                  Future.delayed(Duration(seconds: 1)).then((value) => _controllerCenter.play());
+//                  _controllerCenter.play();
                 },
                 child: Text('Book slot'),
               ),
@@ -330,7 +430,7 @@ class _BookPageState extends State<BookPage> {
         builder: (context) {
           return AlertDialog(
             elevation: 8,
-            backgroundColor: Colors.blue[200],
+            backgroundColor: Colors.blue[100],
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: Colors.black, width: 2),
@@ -379,40 +479,45 @@ class _BookPageState extends State<BookPage> {
         });
       data.add(tempUser);
     }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('Booked Slots'),
-        ListView.builder(
-          itemBuilder: (context, i) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(keys[i]),
-                ListView.builder(
-                  itemBuilder: (context, index) {
-                    var curr = data[i][index];
-                    return ListTile(
-                      title: Text(curr.username),
-                      subtitle: Text(curr.email),
-                    );
-                  },
-                  itemCount: data[i].length,
-                ),
-              ],
-            );
-          },
-          itemCount: keys.length,
-          shrinkWrap: true,
-        ),
-        RaisedButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: Text('Go Back'),
-        ),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Booked Slots'),
+          ListView.builder(
+            itemBuilder: (context, i) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(keys[i]),
+                  ListView.builder(
+                    itemBuilder: (context, index) {
+                      var curr = data[i][index];
+                      return ListTile(
+                        title: Text(curr.username),
+                        subtitle: Text(curr.email),
+                      );
+                    },
+                    itemCount: data[i].length,
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                  ),
+                ],
+              );
+            },
+            itemCount: keys.length,
+            shrinkWrap: true,
+            physics: BouncingScrollPhysics(),
+          ),
+          RaisedButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Go Back'),
+          ),
+        ],
+      ),
     );
   }
 }
