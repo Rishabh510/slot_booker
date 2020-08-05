@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
@@ -60,30 +61,32 @@ class BookPage extends StatefulWidget {
 class _BookPageState extends State<BookPage> {
   static const url = 'https://slot-booker.firebaseio.com/slots.json';
   static const url2 = 'https://slot-booker.firebaseio.com/';
-  String timeSlot = '5-6';
   String username;
   String email;
   final _emailFocus = FocusNode();
   final _slotFocus = FocusNode();
   final _formKey = GlobalKey<FormState>();
-  var _editedObject = UserObject(username: '', email: '', timeSlot: '5-6');
+  var _editedObject = UserObject(username: '', email: '', timeSlot: '5-5:00-6:00 pm');
   var _isLoading = false;
   var count = 0;
+  List<String> timeSlots = ['5:00-6:00 pm', '6:00-7:00 pm', '7:00-8:00 pm'];
+  String timeSlot = '5:00-6:00 pm';
   ConfettiController _controllerCenter;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     count = 0;
-    timeSlot = '5-6';
+    timeSlot = '5:00-6:00 pm';
     _controllerCenter = ConfettiController(duration: const Duration(seconds: 3));
     super.initState();
   }
 
-  @override
-  void didChangeDependencies() {
-    _controllerCenter = ConfettiController(duration: const Duration(seconds: 3));
-    super.didChangeDependencies();
-  }
+//  @override
+//  void didChangeDependencies() {
+//    _controllerCenter = ConfettiController(duration: const Duration(seconds: 3));
+//    super.didChangeDependencies();
+//  }
 
   @override
   void dispose() {
@@ -95,7 +98,7 @@ class _BookPageState extends State<BookPage> {
 
   Widget spinner(BuildContext context) {
     return Container(
-      color: Colors.transparent,
+      color: Colors.black.withOpacity(0.4),
       child: Center(
         child: SpinKitChasingDots(
           color: Colors.deepOrange,
@@ -105,16 +108,39 @@ class _BookPageState extends State<BookPage> {
     );
   }
 
+  InputDecoration decorator(String label, int i) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(fontSize: 20),
+      icon: (i == 2) ? Icon(Icons.email) : (i == 3) ? Icon(Icons.access_time) : Icon(Icons.account_circle),
+      hintText: (i == 2) ? 'example@gmail.com' : (i == 3) ? 'Choose Slot' : 'UsernameABC',
+      border: OutlineInputBorder(
+        borderSide: BorderSide(),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      filled: true,
+//      fillColor: Colors.black.withOpacity(0.1),
+    );
+  }
+
+  List<Color> _colorList = [
+    Colors.red.withOpacity(0.4),
+    Colors.yellow.withOpacity(0.4),
+    Colors.green.withOpacity(0.4),
+    Colors.blue.withOpacity(0.4),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         centerTitle: true,
         elevation: 8,
         title: TypewriterAnimatedTextKit(
           repeatForever: true,
           isRepeatingAnimation: true,
-          speed: Duration(milliseconds: 250),
+          speed: Duration(seconds: 2),
           onTap: () {},
           text: [
             "Slot Booking Application",
@@ -130,6 +156,13 @@ class _BookPageState extends State<BookPage> {
                 SingleChildScrollView(
                   child: Container(
                     height: MediaQuery.of(context).size.height - AppBar().preferredSize.height,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: _colorList,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
@@ -142,9 +175,11 @@ class _BookPageState extends State<BookPage> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: <Widget>[
                                 TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'User Name',
-                                  ),
+                                  decoration: decorator('User Name', 1),
+                                  textCapitalization: TextCapitalization.words,
+                                  cursorColor: Colors.deepOrange,
+                                  cursorWidth: 8,
+                                  cursorRadius: Radius.circular(8),
                                   textInputAction: TextInputAction.next,
                                   validator: (val) {
                                     if (val.isEmpty) {
@@ -153,64 +188,67 @@ class _BookPageState extends State<BookPage> {
                                     return null;
                                   },
                                   onFieldSubmitted: (val) {
-//                FocusScope.of(context).requestFocus(_emailFocus);
                                     _emailFocus.requestFocus();
                                   },
                                   onSaved: (val) {
                                     username = val;
-                                    _editedObject = UserObject(username: val, email: _editedObject.email, timeSlot: _editedObject.timeSlot);
-                                  },
-                                ),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Email',
-                                  ),
-                                  textInputAction: TextInputAction.next,
-                                  keyboardType: TextInputType.emailAddress,
-                                  focusNode: _emailFocus,
-                                  validator: (val) {
-                                    if (val.isEmpty) {
-                                      return 'Please enter email address';
-                                    }
-                                    return null;
-                                  },
-                                  onFieldSubmitted: (val) {
-                                    _slotFocus.requestFocus();
-                                  },
-                                  onSaved: (val) {
-                                    email = val;
                                     _editedObject = UserObject(
-                                      username: _editedObject.username,
-                                      email: val,
+                                      username: val,
+                                      email: _editedObject.email,
                                       timeSlot: _editedObject.timeSlot,
                                     );
                                   },
                                 ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: TextFormField(
+                                    decoration: decorator('Email', 2),
+                                    cursorColor: Colors.deepOrange,
+                                    cursorWidth: 8,
+                                    cursorRadius: Radius.circular(8),
+                                    textInputAction: TextInputAction.next,
+                                    keyboardType: TextInputType.emailAddress,
+                                    focusNode: _emailFocus,
+                                    validator: (val) {
+                                      if (val.isEmpty) {
+                                        return 'Please enter email address';
+                                      }
+                                      return null;
+                                    },
+                                    onFieldSubmitted: (val) {
+                                      _slotFocus.requestFocus();
+                                    },
+                                    onSaved: (val) {
+                                      email = val;
+                                      _editedObject = UserObject(
+                                        username: _editedObject.username,
+                                        email: val,
+                                        timeSlot: _editedObject.timeSlot,
+                                      );
+                                    },
+                                  ),
+                                ),
                                 DropdownButtonFormField(
-                                  value: '5-6',
+                                  elevation: 16,
+                                  hint: Text('choose time slot'),
+                                  dropdownColor: Colors.blue[100],
+                                  value: timeSlots[0],
                                   onSaved: (val) {
                                     _editedObject = UserObject(username: _editedObject.username, email: _editedObject.email, timeSlot: val);
                                   },
-                                  items: [
-                                    DropdownMenuItem(
-                                      child: Text('5-6'),
-                                      value: '5-6',
+                                  items: List.generate(
+                                    timeSlots.length,
+                                    (index) => DropdownMenuItem(
+                                      child: Text(timeSlots[index]),
+                                      value: timeSlots[index],
                                     ),
-                                    DropdownMenuItem(
-                                      child: Text('6-7'),
-                                      value: '6-7',
-                                    ),
-                                    DropdownMenuItem(
-                                      child: Text('7-8'),
-                                      value: '7-8',
-                                    ),
-                                  ],
+                                  ),
                                   onChanged: (val) {
                                     timeSlot = val;
                                     setState(() {});
                                   },
                                   focusNode: _slotFocus,
-                                  decoration: InputDecoration(labelText: 'Choose Slot'),
+                                  decoration: decorator('Choose Slot', 3),
                                 ),
                                 RaisedButton(
                                   onPressed: _bookSlot,
@@ -232,14 +270,14 @@ class _BookPageState extends State<BookPage> {
                               RotateAnimatedTextKit(
                                 onTap: () {},
                                 repeatForever: true,
+                                duration: Duration(seconds: 20),
+                                displayFullTextOnTap: true,
                                 text: [
                                   "Rishabh Raizada",
                                   "rishabh5102000@gmail.com",
                                   "+91 8860932771",
                                 ],
                                 textStyle: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-//                            textAlign: TextAlign.end,
-//                            alignment: AlignmentDirectional.bottomEnd,
                               ),
                             ],
                           ),
@@ -255,8 +293,10 @@ class _BookPageState extends State<BookPage> {
                     alignment: Alignment.center,
                     child: ConfettiWidget(
                       confettiController: _controllerCenter,
-                      blastDirectionality: BlastDirectionality.explosive, // don't specify a direction, blast randomly
-                      shouldLoop: false, // start again as soon as the animation is finished
+                      blastDirectionality: BlastDirectionality.explosive,
+                      // don't specify a direction, blast randomly
+                      shouldLoop: false,
+                      // start again as soon as the animation is finished
                       colors: const [
                         Colors.green,
                         Colors.blue,
@@ -264,7 +304,7 @@ class _BookPageState extends State<BookPage> {
                         Colors.orange,
                         Colors.purple,
                       ],
-                      numberOfParticles: 25,
+                      numberOfParticles: 50,
                       gravity: 0.2,
                     ),
                   ),
@@ -317,17 +357,8 @@ class _BookPageState extends State<BookPage> {
     await slotChecker();
     if (count < 5) {
       _showDialogSuccess(context);
-//      http.post(
-//        url2 + 'slots/$timeSlot.json',
-//        body: json.encode({
-//          'username': username,
-//          'email': email,
-//          'status': true,
-//        }),
-//      );
     } else {
       _showDialogFail(context);
-      print('Slot is already booked');
     }
   }
 
@@ -411,8 +442,25 @@ class _BookPageState extends State<BookPage> {
                   setState(() {
                     _isLoading = false;
                   });
-                  Future.delayed(Duration(seconds: 1)).then((value) => _controllerCenter.play());
-//                  _controllerCenter.play();
+                  Future.delayed(Duration(milliseconds: 500)).then((value) {
+                    _controllerCenter.play();
+                    _scaffoldKey.currentState.showSnackBar(SnackBar(
+                      content: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'Slot booked successfully',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            shadows: [Shadow(color: Colors.black, offset: Offset(-2, 2))],
+                          ),
+                        ),
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                      elevation: 16,
+                      backgroundColor: Colors.deepOrange,
+                    ));
+                  });
                 },
                 child: Text('Book slot'),
               ),
