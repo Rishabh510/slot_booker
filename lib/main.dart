@@ -102,6 +102,7 @@ class _BookPageState extends State<BookPage> {
       child: Center(
         child: SpinKitChasingDots(
           color: Colors.deepOrange,
+          duration: Duration(milliseconds: 1000),
           size: MediaQuery.of(context).size.width / 2,
         ),
       ),
@@ -124,10 +125,10 @@ class _BookPageState extends State<BookPage> {
   }
 
   List<Color> _colorList = [
-    Colors.red.withOpacity(0.4),
-    Colors.yellow.withOpacity(0.4),
-    Colors.green.withOpacity(0.4),
-    Colors.blue.withOpacity(0.4),
+    Colors.red.withOpacity(0.5),
+    Colors.yellow.withOpacity(0.5),
+    Colors.green.withOpacity(0.5),
+    Colors.blue.withOpacity(0.5),
   ];
 
   @override
@@ -250,13 +251,26 @@ class _BookPageState extends State<BookPage> {
                                   focusNode: _slotFocus,
                                   decoration: decorator('Choose Slot', 3),
                                 ),
-                                RaisedButton(
-                                  onPressed: _bookSlot,
-                                  child: Text('Submit'),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: RaisedButton(
+                                    onPressed: _bookSlot,
+                                    color: Colors.deepOrange,
+                                    padding: EdgeInsets.all(12),
+                                    elevation: 16,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    child: myText('Submit'),
+                                  ),
                                 ),
-                                RaisedButton(
+                                OutlineButton(
                                   onPressed: _viewSlots,
-                                  child: Text('View Bookings'),
+                                  child: myText('View Bookings'),
+                                  color: Colors.deepOrange,
+                                  padding: EdgeInsets.all(12),
+                                  highlightColor: Colors.deepOrange.withOpacity(0.5),
+                                  highlightElevation: 16,
+                                  borderSide: BorderSide(color: Colors.deepOrange, width: 2),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),
                               ],
                             ),
@@ -447,14 +461,7 @@ class _BookPageState extends State<BookPage> {
                     _scaffoldKey.currentState.showSnackBar(SnackBar(
                       content: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Slot booked successfully',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            shadows: [Shadow(color: Colors.black, offset: Offset(-2, 2))],
-                          ),
-                        ),
+                        child: myText('Slot booked successfully'),
                       ),
                       behavior: SnackBarBehavior.floating,
                       elevation: 16,
@@ -462,11 +469,27 @@ class _BookPageState extends State<BookPage> {
                     ));
                   });
                 },
-                child: Text('Book slot'),
+                color: Colors.deepOrange,
+                padding: EdgeInsets.all(12),
+                elevation: 16,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: myText('Book Slot'),
               ),
             ],
           );
         });
+  }
+
+  Widget myText(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        shadows: [Shadow(color: Colors.black, offset: Offset(-2, 2))],
+      ),
+    );
   }
 
   _showDialogFail(BuildContext context) {
@@ -490,7 +513,11 @@ class _BookPageState extends State<BookPage> {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: Text('Go Back'),
+                color: Colors.deepOrange,
+                padding: EdgeInsets.all(12),
+                elevation: 16,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: myText('Go Back'),
               ),
             ],
           );
@@ -528,43 +555,102 @@ class _BookPageState extends State<BookPage> {
       data.add(tempUser);
     }
     return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Booked Slots'),
-          ListView.builder(
-            itemBuilder: (context, i) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(keys[i]),
-                  ListView.builder(
-                    itemBuilder: (context, index) {
-                      var curr = data[i][index];
-                      return ListTile(
-                        title: Text(curr.username),
-                        subtitle: Text(curr.email),
-                      );
-                    },
-                    itemCount: data[i].length,
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                  ),
-                ],
-              );
-            },
-            itemCount: keys.length,
-            shrinkWrap: true,
-            physics: BouncingScrollPhysics(),
-          ),
-          RaisedButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('Go Back'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Booked Slots',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            ListView.builder(
+              itemBuilder: (context, i) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        '${keys[i]}',
+                        style: TextStyle(
+                          fontSize: 18,
+                          decoration: TextDecoration.underline,
+                          decorationStyle: TextDecorationStyle.dashed,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.deepOrange,
+                          shadows: [Shadow(color: Colors.black, offset: Offset(-1, 1))],
+                        ),
+                      ),
+                    ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Table(
+                        children: List.generate(data[i].length, (index) {
+                          var curr = data[i][index];
+                          return TableRow(children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                curr.username,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w200,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                curr.email,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w200,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                'TRUE',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w200,
+                                ),
+                              ),
+                            ),
+                          ]);
+                        }),
+                        border: TableBorder.all(color: Colors.deepOrange, width: 2),
+                      ),
+                    ),
+                  ],
+                );
+              },
+              itemCount: keys.length,
+              shrinkWrap: true,
+              physics: BouncingScrollPhysics(),
+            ),
+            RaisedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              color: Colors.deepOrange,
+              padding: EdgeInsets.all(12),
+              elevation: 16,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: myText('Go Back'),
+            ),
+          ],
+        ),
       ),
     );
   }
