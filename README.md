@@ -7,6 +7,7 @@ Download the v8 version from Assets. Use v7 only when device is more than 3yrs+ 
 
 ## API LINK:
 The json data can be viewed at: https://slot-booker.firebaseio.com/slots.json
+For testing Firebase API endpoints - refer https://firebase.google.com/docs/reference/rest/database
 
 ## Screenshots: 
 ![Screenshot_20200805-182024](https://user-images.githubusercontent.com/42823059/89415013-e9e5f380-d748-11ea-9877-2871c8304ddf.jpg)
